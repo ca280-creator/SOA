@@ -1,0 +1,60 @@
+FROM php:8.1-apache
+RUN docker-php-ext-install mysqli pdo pdo_mysql
+RUN a2enmod rewrite
+COPY Proiect/ /var/www/html/
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html
+RUN echo '<Directory /var/www/html/>\n\
+    Options Indexes FollowSymLinks\n\
+    AllowOverride All\n\
+    Require all granted\n\
+</Directory>' > /etc/apache2/conf-available/docker-php.conf \
+    && a2enconf docker-php
+RUN echo 'DirectoryIndex MainFrame.php index.php index.html' >> /etc/apache2/apache2.conf
+RUN echo '<FilesMatch .php$>\n\
+    SetHandler application/x-httpd-php\n\
+</FilesMatch>' >> /etc/apache2/apache2.conf
+
+EXPOSE 80
+
+
+------------------------------------------------
+version: '3.8'
+services:
+  web:
+    build: .
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: ca280    
+      MYSQL_USER: user
+      MYSQL_PASSWORD: pass
+    ports:
+      - "3306:3306"
+
+-----------------------------------------------------
+docker-compose down
+docker-compose up -d --build
+
+----------------------------------------------------
+docker exec -i soa-db-1 mysql -u user -ppass ca280 < "Proiect/ca280_evaluarenationala.sql"
+docker exec -it soa-db-1 mysql -u user -ppass ca280 -e "SHOW TABLES;"
+
+-------------------------------------------------
+
+docker build -t ca280/nume_imagine:tag 
+
+------------------ L2
+
+docker build . -t numecont/repository:versiunea
+
+docker build . -t ca280/ca280:latest 
+docker push ca280/ca280:latest
+docker pull ca280/ca280:latest
+
+
